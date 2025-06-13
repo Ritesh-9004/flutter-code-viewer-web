@@ -17,9 +17,7 @@ function decreaseFont() {
   const s = parseInt(getComputedStyle(r).getPropertyValue('--code-font-size'));
   r.style.setProperty('--code-font-size', Math.max(s - 2, 8) + 'px');
 }
-function resetFont() {
-  document.documentElement.style.setProperty('--code-font-size', '14px');
-}
+
 
 // --- VISIBILITY TOGGLERS ---
 function toggleLineNumbers() {
@@ -45,11 +43,14 @@ function showPlaceholder(message = "Click a file to view its content.") {
 function closeFolder() {
   filesMap.clear();
   namePathMap.clear();
-showPlaceholder("Load a project folder to begin.");
+  fileTextCache.clear(); // if you're caching text
+  mdNavStack = [];
 
   document.getElementById('fileList').innerHTML = '';
- 
+  showPlaceholder("Load a project folder to begin.");
+
   updateHeader('Flutter Code Viewer');
+  history.replaceState({}, '', location.pathname); // clear hash
   console.clear();
   localStorage.clear();
   sessionStorage.clear();
