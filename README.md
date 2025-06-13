@@ -18,7 +18,8 @@
 ---
 ##  Demo Video 
 
-[Watch the demo](assets/demo.mp4)
+[![Watch the demo](assets/thumbnail.png)](assets/Demo.mp4)
+
 
 ---
 ## Getting Started
