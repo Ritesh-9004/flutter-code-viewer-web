@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flutter Code Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Prism.js: Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-dart.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-kotlin.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-groovy.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+
+  <!-- Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" />
+
+  <!-- Devicon icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@master/devicon.min.css" />
+
+  <!-- Font Awesome & Flaticon UIcons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-straight/css/uicons-regular-straight.css" />
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css" />
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-bold-solid/css/uicons-bold-solid.css" />
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uicons@2.0.0/css/uicons-regular-rounded.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uicons@2.0.0/css/uicons-thin.css" />
+
+  <!-- Excel file support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
+
+  <!-- Your custom CSS and viewer logic -->
+  <link rel="stylesheet" href="style.css" />
+  <script src="viewer.js" defer></script>
+
+<body>
+    <!-- Ribbon bar -->
+    <div id="ribbon">
+        <!-- Left tabs -->
+        <div id="ribbon-left">
+            <div id="toggleExplorer" class="tab" onclick="toggleSidebar()" title="Show/Hide Sidebar">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="tab dropdown">File
+                <div class="menu">
+                    <div onclick="pickFiles()">Open Project Folder</div>
+                    <div onclick="closeFolder()"> Close Folder</div>
+                
+                </div>
+            </div>
+
+            <div class="tab dropdown">View
+                <div class="menu">
+                    <div onclick="increaseFont()"> Zoom In</div>
+                    <div onclick="decreaseFont()">Zoom Out</div>
+                    <div onclick="resetFont()"> Reset Font</div>
+                    <div onclick="toggleSidebar()"> Toggle Sidebar</div>
+                    <div onclick="toggleLineNumbers()"> Toggle Line Numbers</div>
+                 
+                </div>
+            </div>
+
+        <div class="tab dropdown">Go
+  <div class="menu">
+    <div onclick="showGoToFileModal()">Go to File...</div>
+    <div onclick="showGoToLineModal()">Go to Line...</div>
+  </div>
+</div>
+
+<!-- These modals should be outside the menu, not inside -->
+<div id="goToFileModal" class="modal">
+  <div class="modal-content">
+    <input type="text" id="goToFileInput" placeholder="Type file name..." autofocus spellcheck="false" autocomplete="off" />
+    <div id="fileSuggestions"></div>
+  </div>
+</div>
+
+<div id="goToLineModal" class="modal">
+  <div class="modal-content">
+    <input type="number" id="goToLineInput" placeholder="Enter line number" autofocus spellcheck="false" autocomplete="off"/>
+  </div>
+</div>
+
+        </div>
+
+        <!-- Right-aligned tools -->
+        <!-- Right-aligned tools -->
+        <div id="ribbon-tools">
+            <div id="searchBoxContainer" style="margin-left: auto; padding-right: 10px;">
+                <input id="searchInput" type="text" placeholder="Search..." oninput="handleSearch()" autocomplete="off" spellcheck="false"
+                    style="padding: 4px 8px; border-radius: 4px; border: none;" />
+                <button onclick="highlightPrevMatch()" title="Previous Match">
+                    <i class="fi fi-rr-arrow-small-left"></i>
+                </button>
+                <button onclick="highlightNextMatch()" title="Next Match">
+                    <i class="fi fi-rr-arrow-small-right"></i>
+                </button>
+            </div>
+            <button onclick="increaseFont()" title="Zoom In">
+                <i class="fi fi-rr-plus"></i>
+            </button>
+            <button onclick="decreaseFont()" title="Zoom Out">
+                <i class="fi fi-sr-minus"></i>
+            </button>
+            <button onclick="resetFont()" title="Reset Font">
+                <i class="fi fi-rr-refresh"></i>
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Main container -->
+    <div id="container">
+        <div id="sidebar">
+            <div id="fileList"></div>
+        </div>
+
+        <div id="main">
+            <div id="header">Flutter Code Viewer</div>
+            <div id="viewer">
+                <div class="placeholder">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" class="placeholder-icon"
+                        alt="Folder icon" />
+                    <p>Load a project folder to begin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="globalSearchModal" class="modal" style="display: none;">
+        <div class="modal-content">
+           <input type="text" id="globalSearchInput" placeholder="Global Search..." spellcheck="false" autocomplete="off" />
+
+
+            <div id="globalSearchResults"></div>
+        </div>
+    </div>
+
+</body>
+
+
+</html>
