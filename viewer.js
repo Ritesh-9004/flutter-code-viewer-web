@@ -1,5 +1,3 @@
-// viewer.js
-
 // globals
 let filesMap = new Map();
 let namePathMap = new Map();
@@ -18,6 +16,9 @@ function decreaseFont() {
   r.style.setProperty('--code-font-size', Math.max(s - 2, 8) + 'px');
 }
 
+function resetFont() {
+  document.documentElement.style.setProperty('--code-font-size', '14px');
+}
 
 // --- VISIBILITY TOGGLERS ---
 function toggleLineNumbers() {
@@ -43,7 +44,7 @@ function showPlaceholder(message = "Click a file to view its content.") {
 function closeFolder() {
   filesMap.clear();
   namePathMap.clear();
-  fileTextCache.clear(); // if you're caching text
+  fileTextCache.clear(); 
   mdNavStack = [];
 
   document.getElementById('fileList').innerHTML = '';
@@ -63,14 +64,13 @@ function normalizeMarkdownPath(currentPath, href) {
   const url = new URL(href, 'file://' + parts.join('/') + '/');
   return decodeURIComponent(url.pathname.slice(1));
 }
-
 // --- KEYBOARD SHORTCUTS ---
 document.addEventListener('keydown', e => {
-  //  Check global search FIRST
+  // Global search
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
     e.preventDefault();
     showGlobalSearchModal();
-    return; // stop further matches
+    return;
   }
 
   // Local search
@@ -80,22 +80,46 @@ document.addEventListener('keydown', e => {
     return;
   }
 
+  // Go to file
   if (e.ctrlKey && e.key.toLowerCase() === 'p') {
     e.preventDefault();
     showGoToFileModal();
   }
 
+  // Go to line
   if (e.ctrlKey && e.key.toLowerCase() === 'g') {
     e.preventDefault();
     showGoToLineModal();
   }
 
+  // Escape from modals
   if (e.key === 'Escape') {
     hideGoToFileModal();
     hideGoToLineModal();
     hideGlobalSearchModal();
   }
-  document.getElementById('searchInput')?.addEventListener('keydown', e => {
+
+  // Zoom In: Ctrl + = or Ctrl + +
+  if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+    e.preventDefault();
+    increaseFont();
+  }
+
+  // Zoom Out: Ctrl + -
+  if (e.ctrlKey && e.key === '-') {
+    e.preventDefault();
+    decreaseFont();
+  }
+
+  // Reset Font: Ctrl + 0
+  if (e.ctrlKey && e.key === '0') {
+    e.preventDefault();
+    resetFont();
+  }
+});
+
+// --- LOCAL SEARCH KEY HANDLING ---
+document.getElementById('searchInput')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     highlightNextMatch();
@@ -104,7 +128,6 @@ document.addEventListener('keydown', e => {
     if (e.shiftKey) highlightPrevMatch();
     else highlightNextMatch();
   }
-});
 });
 
 
@@ -217,7 +240,6 @@ document.getElementById('globalSearchInput')?.addEventListener('input', e => {
   const term = e.target.value.trim();
   debounceTimer = setTimeout(() => {
     if (term.length < 2) return;
-    console.log("Searching for:", term); // ✅ Debug log
     performGlobalSearch(term);
   }, 400);
 });
@@ -242,7 +264,7 @@ function pickFiles() {
   inp.webkitdirectory = true;
   inp.multiple = true;
   inp.onchange = () => {
-    const files = Array.from(inp.files);  // ✅ Moved to the top
+    const files = Array.from(inp.files);
     fileTextCache.clear();                // clear cache now that files are ready
     filesMap.clear();
     namePathMap.clear();
@@ -388,7 +410,7 @@ function scrollFirst() {
     updateHeader(path);
 
   // XLSX
-  } // --- inside loadFile, replace the XLSX block with this ---
+  } 
 else if (ext === 'xlsx') {
   const reader = new FileReader();
   reader.onload = () => {
@@ -490,27 +512,34 @@ else if (ext === 'xlsx') {
 
   // Code / Text
   } else {
-    const r = new FileReader();
-    r.onload = () => {
-      const lang = getLanguageFromExt(ext);
-      const hi = Prism.highlight(r.result,
-        Prism.languages[lang]||Prism.languages.plaintext, lang
-      );
-      vw.innerHTML = `<pre class="line-numbers language-${lang}"><code>${hi}</code></pre>`;
-      Prism.highlightAll();
-  requestAnimationFrame(() => {
-  Prism.plugins.lineNumbers?.resize();
-}); 
-      updateHeader(path);
+  const r = new FileReader();
+  r.onload = () => {
+    const lang = getLanguageFromExt(ext);
+    const hi = Prism.highlight(
+      r.result,
+      Prism.languages[lang] || Prism.languages.plaintext,
+      lang
+    );
+
+    vw.innerHTML = `<pre class="line-numbers language-${lang}"><code>${hi}</code></pre>`;
+    Prism.highlightAll();
+
+    // Wait for DOM update, then resize line numbers
+    requestAnimationFrame(() => {
+      Prism.plugins.lineNumbers?.resize();
+    });
+
+    updateHeader(path);
+
     if (hl) {
-  setTimeout(() => {
-    highlightMatches(hl);
-    scrollFirst();
-  }, 50); // allow DOM to render first
+      setTimeout(() => {
+        highlightMatches(hl);
+        scrollFirst();
+      }, 50); // ensure DOM elements are painted
+    }
+  };
+  r.readAsText(file);
 }
-    };
-    r.readAsText(file);
-  }
 
   if (pushHist) {
     history.pushState({ path, searchTerm: hl }, '', '#' + encodeURIComponent(path));
@@ -528,34 +557,24 @@ function handleSearch() {
   const vw = document.getElementById('viewer');
   const blk = vw.querySelector('pre code, .markdown-body');
 
-  // Clear old highlights
-  blk.querySelectorAll('mark.search-highlight').forEach(m => {
-    const parent = m.parentNode;
-    parent.replaceChild(document.createTextNode(m.textContent), m);
-    parent.normalize();
-  });
+  if (!blk || !term) return;
 
-  if (!term) return;
+  // Clear existing highlights
+  blk.innerHTML = blk.textContent;
 
   const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-  const walker = document.createTreeWalker(blk, NodeFilter.SHOW_TEXT);
-  searchMatches = [];
-  let node;
-  while ((node = walker.nextNode())) {
-    if (regex.test(node.textContent)) {
-      const mark = document.createElement('mark');
-      mark.className = 'search-highlight';
-      mark.textContent = node.textContent;
-      const clone = mark.cloneNode(true);
-      node.parentNode.replaceChild(clone, node);
-      searchMatches.push(clone);
-    }
-  }
+  let html = blk.innerHTML;
 
-  // Reset scroll index
+  // Replace all matches with <mark>
+  html = html.replace(regex, match => `<mark class="search-highlight">${match}</mark>`);
+  blk.innerHTML = html;
+
+  // Collect and scroll to first
+  searchMatches = [...blk.querySelectorAll('mark.search-highlight')];
   currentMatchIndex = 0;
   highlightCurrentMatch();
 }
+
 function highlightCurrentMatch() {
   searchMatches.forEach(m => m.classList.remove('current-match'));
   if (searchMatches.length > 0) {

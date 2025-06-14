@@ -55,7 +55,7 @@
                 
                 </div>
             </div>
-
+                <!--View tab-->
             <div class="tab dropdown">View
                 <div class="menu">
                     <div onclick="increaseFont()"> Zoom In</div>
@@ -65,7 +65,7 @@
                  
                 </div>
             </div>
-
+            <!--GO Tab-->
         <div class="tab dropdown">Go
   <div class="menu">
     <div onclick="showGoToFileModal()">Go to File...</div>
@@ -73,14 +73,14 @@
   </div>
 </div>
 
-<!-- These modals should be outside the menu, not inside -->
+<!-- Go to File (Modal) -->
 <div id="goToFileModal" class="modal">
   <div class="modal-content">
     <input type="text" id="goToFileInput" placeholder="Type file name..." autofocus spellcheck="false" autocomplete="off" />
     <div id="fileSuggestions"></div>
   </div>
 </div>
-
+<!--Go to line Modal-->
 <div id="goToLineModal" class="modal">
   <div class="modal-content">
     <input type="number" id="goToLineInput" placeholder="Enter line number" autofocus spellcheck="false" autocomplete="off"/>
@@ -89,9 +89,10 @@
 
         </div>
 
-        <!-- Right-aligned tools -->
+       
         <!-- Right-aligned tools -->
         <div id="ribbon-tools">
+            <!--Search Box-->
             <div id="searchBoxContainer" style="margin-left: auto; padding-right: 10px;">
                 <input id="searchInput" type="text" placeholder="Search..." oninput="handleSearch()" autocomplete="off" spellcheck="false"
                     style="padding: 4px 8px; border-radius: 4px; border: none;" />
@@ -133,6 +134,7 @@
             </div>
         </div>
     </div>
+    <!--Global Search BOx(modal)-->
     <div id="globalSearchModal" class="modal" style="display: none;">
         <div class="modal-content">
            <input type="text" id="globalSearchInput" placeholder="Global Search..." spellcheck="false" autocomplete="off" />
