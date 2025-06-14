@@ -18,7 +18,8 @@
 ---
 ##  Demo Video 
 
-[Watch the demo](assets/demo.mp4)
+[![Watch the demo]](https://github.com/user-attachments/assets/be4500de-5560-45d3-aa13-aed9b3f4e8ba)
+
 
 ---
 ## Getting Started
